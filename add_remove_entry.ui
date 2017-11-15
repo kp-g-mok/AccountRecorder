@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>320</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Import Item</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="1" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="3" column="0">
+      <widget class="QGroupBox" name="entryDateGroup">
+       <property name="title">
+        <string>Entry Date</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+       <property name="checkable">
+        <bool>false</bool>
+       </property>
+       <widget class="QLineEdit" name="lin_Entry_Date">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>20</y>
+          <width>331</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>Input Date in YYYY-MM format</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QGroupBox" name="accountNameGroup">
+       <property name="title">
+        <string>Account Name</string>
+       </property>
+       <widget class="QComboBox" name="combo_Account_Names">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>20</y>
+          <width>331</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="editable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QFrame" name="frame_2">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QFrame" name="frame">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QGroupBox" name="moneyGroup">
+       <property name="title">
+        <string>Entry Monetary Value</string>
+       </property>
+       <widget class="QLineEdit" name="lin_Money_Value">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>20</y>
+          <width>331</width>
+          <height>21</height>
+         </rect>
+        </property>
+        <property name="placeholderText">
+         <string>Input the Entry Monetary Value</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>combo_Account_Names</tabstop>
+  <tabstop>lin_Entry_Date</tabstop>
+  <tabstop>lin_Money_Value</tabstop>
+  <tabstop>buttonBox</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>266</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>319</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

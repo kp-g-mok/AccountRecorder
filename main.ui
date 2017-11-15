@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1600</width>
+    <height>900</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>White_Background_Annuity.png</normaloff>White_Background_Annuity.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="FileList">
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1600</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="act_New"/>
+    <addaction name="act_Open"/>
+    <addaction name="act_Close_Tab"/>
+    <addaction name="act_Change_Default_Directory"/>
+    <addaction name="act_Exit"/>
+   </widget>
+   <widget class="QMenu" name="menuTab_Functions">
+    <property name="title">
+     <string>Account Functions</string>
+    </property>
+    <widget class="QMenu" name="menuAdd">
+     <property name="title">
+      <string>Add</string>
+     </property>
+     <addaction name="act_Add_Account"/>
+     <addaction name="act_Add_Entry"/>
+    </widget>
+    <widget class="QMenu" name="menuRemove">
+     <property name="title">
+      <string>Remove</string>
+     </property>
+     <addaction name="act_Remove_Account"/>
+     <addaction name="act_Remove_Entry"/>
+    </widget>
+    <addaction name="act_Refresh_Accounts"/>
+    <addaction name="act_Change_Start_Date"/>
+    <addaction name="menuAdd"/>
+    <addaction name="menuRemove"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuTab_Functions"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="act_New">
+   <property name="text">
+    <string>New Account Database</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="act_Open">
+   <property name="text">
+    <string>Open Account Database</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="act_Close_Tab">
+   <property name="text">
+    <string>Close Account Database</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="act_Exit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+Q</string>
+   </property>
+  </action>
+  <action name="act_Refresh">
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionClear_History">
+   <property name="text">
+    <string>Clear History</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+H</string>
+   </property>
+  </action>
+  <action name="act_Move_Link">
+   <property name="text">
+    <string>Move Item</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="act_Import">
+   <property name="text">
+    <string>Import</string>
+   </property>
+  </action>
+  <action name="act_Open_Multiple">
+   <property name="text">
+    <string>Open Multiple</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O, Ctrl+S</string>
+   </property>
+  </action>
+  <action name="act_Refresh_Accounts">
+   <property name="text">
+    <string>Refresh Accounts</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R, F5</string>
+   </property>
+  </action>
+  <action name="act_Add_Account">
+   <property name="text">
+    <string>Add Account</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+A</string>
+   </property>
+  </action>
+  <action name="act_Add_Entry">
+   <property name="text">
+    <string>Add Entry</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+E</string>
+   </property>
+  </action>
+  <action name="act_Remove_Account">
+   <property name="text">
+    <string>Remove Account</string>
+   </property>
+  </action>
+  <action name="act_Remove_Entry">
+   <property name="text">
+    <string>Remove Entry</string>
+   </property>
+  </action>
+  <action name="actiton_Change_Default_Directory">
+   <property name="text">
+    <string>Change Default Directory</string>
+   </property>
+  </action>
+  <action name="act_Change_Default_Directory">
+   <property name="text">
+    <string>Change Default Directory</string>
+   </property>
+  </action>
+  <action name="act_Change_Start_Date">
+   <property name="text">
+    <string>Change Account Database Start Date</string>
+   </property>
+  </action>
+  <action name="act_Change_Database_Type">
+   <property name="text">
+    <string>Change Database Type</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
