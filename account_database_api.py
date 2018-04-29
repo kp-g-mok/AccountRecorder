@@ -33,6 +33,10 @@ class Database(Persistent):
         self.connection = None
         self.root = None
 
+    def refresh(self):
+        self.__exit__(None, None, None)
+        self.__enter__()
+
     def get_account(self, account: str):
         """ Gets the account data from the datbase
             If the account doesn't exist, create it first

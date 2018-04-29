@@ -42,6 +42,22 @@ class Frame(QtGui.QWidget, form_frame):
         self.initialize_shortcuts()
         self.initialize_components()
 
+    def setupUi(self, Form):
+        Form.setObjectName("Form")
+        Form.resize(964, 677)
+        self.gridLayout_6 = QtWidgets.QGridLayout(Form)
+        self.gridLayout_6.setObjectName("gridLayout_6")
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.gridLayout_6.addLayout(self.gridLayout, 1, 0, 1, 1)
+
+        self.retranslateUi(Form)
+        QtCore.QMetaObject.connectSlotsByName(Form)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        Form.setWindowTitle(_translate("Form", "Form"))
+
     def connect_components(self):
         self.tableAccountData.cellChanged.connect(self.cell_changed)
 
