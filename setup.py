@@ -35,7 +35,7 @@ executables = [
                targetName='Account_Recorder.exe')
 ]
 
-includes = ['PyQt5', 'datetime', 'json', 'os', 'pyqtgraph', 'sys']
+includes = ['PyQt5', 'datetime', 'json', 'os', 'pyqtgraph', 'sys', 'ZODB', 'persistent', 'BTrees', 'transaction']
 
 setup(name='Account Recoder',
       version='0.1',
