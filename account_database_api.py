@@ -1,165 +1,111 @@
-import json
 import os
-
 import datetime
+
+import ZODB
+import ZODB.FileStorage
+from persistent import Persistent
+from BTrees import OOBTree, OIBTree
+import transaction
 
 __author__ = 'Gareth Mok'
 
+class Database(Persistent):
+    def __init__(self, filepath: str):
+        setup_db = not os.path.isfile(filepath)
+        self.db = ZODB.DB(filepath)
+        if setup_db:
+            self.connection = self.db.open()
+            self.root = self.connection.root()
+            self.root.accounts = OOBTree.BTree()
+            transaction.commit()
+            self.connection.close()
+            
+        self.connection = None
+        self.root = None
 
-class Account:
-    def __init__(self, filepath, database_type=None, start_date=None):
+    def __enter__(self):
+        self.connection = self.db.open()
+        self.root = self.connection.root()
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        transaction.commit()
+        self.connection.close()
+        self.connection = None
+        self.root = None
+
+    def get_account(self, account: str):
+        """ Gets the account data from the datbase
+            If the account doesn't exist, create it first
         """
-        Headers are Account Names and variable
-        :type filepath: str
-        :type database_type: str
-        :type start_date: str in %Y-%m format
-        :param filepath: filepath path location
-        :param database_type: database type: 'Monthly', 'Quarterly' or 'Yearly'
-        :param start_date: Beginning date for the database
-        :return:
-        """
-        assert isinstance(filepath, str)
-        self.filepath = filepath
-        self.data = {}
+        if not self.connection and not self.root:
+            raise ConnectionError('Database connection not setup yet. Use the database with a context manager.')
+        if account not in self.root.accounts:
+            self.root.accounts[account] = Account()
+        return self.root.accounts[account]
+    
+    def remove_account(self, account: str):
+        if not self.connection and not self.root:
+            raise ConnectionError('Database connection not setup yet. Use the database with a context manager.')
+        del self.root.accounts[account]
 
-        if os.path.isfile(filepath):
-            self.read()
-        else:
-            if database_type is None and start_date is None:
-                database_type = "Monthly"
-                now = datetime.datetime.now()
-                start_date = str(now.year) + "-" + str(now.month)
-            else:
-                assert isinstance(database_type, str)
-                assert isinstance(start_date, str)
+    def grab_accounts(self):
+        return self.root.accounts.keys()
 
-                self.check_date_format(start_date)
-                database_types = ['Monthly', 'Quarterly', 'Yearly']
-                if database_type not in database_types:
-                    raise ValueError('Value Error: Invalid type. Type must be "Monthly", "Quarterly", or "Yearly"')
 
-            self.data['Type'] = database_type
-            self.data['Start Date'] = start_date
-            self.data['End Date'] = start_date
-            self.data['Accounts'] = {}
-            self.data['Latest Dates'] = {}
-            self.write()
-
-    def new(self):
-        with open(self.filepath, 'w') as outfile:
-            json.dump({}, outfile, indent=4)
-        self.read()
-
-    def read(self):
-        with open(self.filepath, 'r') as readfile:
-            self.data = json.load(readfile)
-
-    def write(self):
-        with open(self.filepath, 'w') as outfile:
-            json.dump(self.data, outfile, indent=4)
-        self.read()
-
-    def get_type(self):
-        self.read()
-        return self.data['Type']
+class Account(Persistent):
+    def __init__(self):
+        self.type = ''
+        self.start_date = ''
+        self.end_date = ''
+        self.splits = OOBTree.BTree()        
 
     def get_start_date(self):
-        self.read()
-        return self.date_parser(self.data['Start Date'])
+        return self.date_parser(self.start_date)
 
-    def get_end_date(self):
-        self.read()
-        return self.date_parser(self.data['End Date'])
-
-    def set_start_date(self, input_date):
+    def set_start_date(self, input_date: str):
         """
         Setter for Start Date of Account Database
         :type input_date: str in '%Y-%m' format
         :param input_date: New start date for account database
         """
-        assert isinstance(input_date, str)
         self.check_date_format(input_date)
+        self.start_date = input_date
 
-        self.read()
-        self.data['Start Date'] = input_date
-        self.write()
-
-    def set_end_date(self, input_date):
+    def get_end_date(self):
+        return self.date_parser(self.end_date[0])
+    
+    def set_end_date(self, input_date: str):
         """
-        Setter for Start Date of Account Database
-        :type input_date: positive int
-        :param input_date: New end date for account database
+        Setter for End Date of Account Database
+        :type input_date: str in '%Y-%m' format
+        :param input_date: New start date for account database
         """
-        assert isinstance(input_date, str)
-
         self.check_date_format(input_date)
+        self.end_date = input_date
 
-        self.read()
-        self.data['End Date'] = input_date
-        self.write()
-
-    def get_iterations(self):
+    def add_split(self, name: str, part_of_total=True):
         """
-        Get the number of iterations this account database requires between the starting and ending date
-        of the account
-        :return: an int for the number of months, quarters, or years that are between the starting and ending dates
-        """
-
-        self.read()
-        start_date = self.get_start_date()
-        end_date = self.get_end_date()
-
-        if self.get_type() == "Monthly":
-            # Format: MM/YYYY
-            start_month, start_year = [int(piece) for piece in start_date.split("/")]
-            end_month, end_year = [int(piece) for piece in end_date.split("/")]
-            return (end_year - start_year) * 12 + (end_month - start_month) + 1
-        elif self.get_type() == "Quarterly":
-            # Format: Q# YYYYY
-            start_quarter = int(start_date.split(" ")[0][1])  # Get the number after the Q
-            start_year = int(start_date.split(" ")[1])
-            end_quarter = int(end_date.split(" ")[0][1])
-            end_year = int(end_date.split(" ")[1])
-
-            return (end_year - start_year) * 4 + (end_quarter - start_quarter) + 1
-        elif self.get_type() == "Yearly":
-            # Format: YYYY
-            return int(end_date) - int(start_date) + 1
-
-    def add_account(self, name, skip=None):
-        """
-        Add an account to the database, does nothing if it exists
+        Add a split of the account to the database, does nothing if it exists
         :type name: str
-        :type skip: bool
+        :type part_of_total: bool
         :param name: single string that holds the name of the account to add to
-        :param skip: optional param that determines if the account should be skipped from the total calculations
+        :param part_of_total: optional param that determines if the account should be skipped from the total calculations
         :return:
         """
-        assert isinstance(name, str)
+        if name not in self.splits:
+            self.splits[name] = Split(part_of_total)        
 
-        self.read()
-        if name not in self.data['Accounts'].keys():
-            self.data['Accounts'][name] = {}
-            self.data['Latest Dates'][name] = ''
-            if skip:
-                self.data['Accounts'][name]['Skip'] = 'Just DO ET'
-            self.write()
-
-    def add_entry(self, name, record_date, money):
+    def add_split_entry(self, split_name: str, record_date: str, money: str):
         """
         Add an item to the database, rewrites if an item exists
-        :type name: str
+        :type split_name: str
         :type record_date: str in '%Y-%m' format
         :type money: str
-        :param name: single string that holds the name of the account to add to
+        :param split_name: single string that holds the name of the split to add to or update
         :param record_date: Date the record is for
         :param money: holds a string of numbers separated by commas and periods
         :return:
         """
-        assert isinstance(name, str)
-        assert isinstance(record_date, str)
-        assert isinstance(money, str)
-
         self.check_date_format(record_date)
 
         try:
@@ -181,69 +127,90 @@ class Account:
             raise ValueError("ValueError: Invalid monetary value. "
                              "Value needs to be a number with only commas and periods")
 
-        self.read()
-        if name not in self.data['Accounts'].keys():
-            self.data['Accounts'][name] = {}
-        self.data['Accounts'][name][record_date] = money
-        self.write()
+        if split_name not in self.splits:
+            raise KeyError("Split doesn't exist in account")
+        self.splits[split_name].add_update_record(record_date, money)
 
-        if self.data['Latest Dates'][name] < record_date or self.data['Latest Dates'][name] == '':
-            # Current account latest date is lower than new entry date
-            # Set the account latest date to the new entry date
-            self.data['Latest Dates'][name] = record_date
-            self.write()
         if self.data['End Date'] < record_date:
             # Current account database end date is lower than new entry date
             # Set the account database date to the new entry date
             self.set_end_date(record_date)
 
-    def remove_account(self, name):
+    def remove_split(self, split_name: str):
         """
-        Remove an account to the database, does nothing if it doesn't exists
-        :type name: str
+        Remove an split from the account, does nothing if it doesn't exists
+        :type split_name: str
         :param name: single string that holds the name of the account to add to
         :return:
         """
-        assert isinstance(name, str)
+        if split_name in self.splits:
+            del self.splits[split_name]
 
-        self.read()
-        if name in self.data['Accounts'].keys():
-            self.data['Accounts'].pop(name)
-            self.data['Latest Dates'].pop(name)
-            self.write()
-
-    def remove_entry(self, name, record_date):
+    def remove_split_entry(self, split_name: str, record_date: str):
         """
-        Remove an item from the database
+        Remove a record from the database
         :type name: str
         :type record_date: str in '%Y-%m' format
-        :param name: single string that holds the name of the account to add to
+        :param split_name: single string that holds the name of the split to remove from
         :param record_date: Date the record is for
         :return:
         """
-        assert isinstance(name, str)
-        assert isinstance(record_date, str)
-
         self.check_date_format(record_date)
 
-        self.read()
-        if name not in self.data['Accounts'].keys():
-            self.data['Accounts'][name] = {}
-        self.data['Accounts'][name].pop(record_date)
-        self.write()
+        if split_name not in self.splits:
+            raise KeyError("Split doesn't exist in account")
+        self.splits[split_name].remove_record(record_date)
 
-        if record_date >= self.data['Latest Dates'][name]:
-            # Current account latest date is being removed
-            # Set the account latest date to the lasted on record
-            new_latest_date = sorted(self.data['Accounts'][name])[-1]
-            self.data['Latest Dates'][name] = new_latest_date
-            self.write()
+        latest_dates = sorted([split.latest_date for split in self.splits])
+        if self.end_date > latest_dates[-1]:
+            # Current account database end date is greater than latest dates for all accounts
+            # Set the account database date to the new entry date
+            self.set_end_date(latest_dates[-1])
 
-            latest_dates = sorted(self.data['Latest Dates'].values())
-            if self.data['End Date'] > latest_dates[-1]:
-                # Current account database end date is greater than latest dates for all accounts
-                # Set the account database date to the new entry date
-                self.set_end_date(latest_dates[-1])
+    def grab_split_names(self):
+        """
+        Grab all the split names in the account
+        :return: a sorted list of Split names
+        """
+        return sorted(self.splits.keys())
+
+    def grab_split_data(self, split_name: str):
+        """
+        Grab all the split data
+        :param name: single string that holds the name of the split to retrieve data from
+        :return: tuple with a boolean and a dictionary formated in date parsed date str : money int
+            boolean holds whether the split should be counted towards the total
+        """
+        if split_name in self.splits:
+            split = self.splits[split_name]
+            return (split.part_of_total, 
+                {self.date_parser(key): value for key, value in split.records.items()}, )
+
+    def get_iterations(self):
+        """
+        Get the number of iterations this account database requires between the starting and ending date
+        of the account
+        :return: an int for the number of months, quarters, or years that are between the starting and ending dates
+        """
+        start_date = self.get_start_date()
+        end_date = self.get_end_date()
+
+        if self.get_type() == "Monthly":
+            # Format: MM/YYYY
+            start_month, start_year = [int(piece) for piece in start_date.split("/")]
+            end_month, end_year = [int(piece) for piece in end_date.split("/")]
+            return (end_year - start_year) * 12 + (end_month - start_month) + 1
+        elif self.get_type() == "Quarterly":
+            # Format: Q# YYYYY
+            start_quarter = int(start_date.split(" ")[0][1])  # Get the number after the Q
+            start_year = int(start_date.split(" ")[1])
+            end_quarter = int(end_date.split(" ")[0][1])
+            end_year = int(end_date.split(" ")[1])
+
+            return (end_year - start_year) * 4 + (end_quarter - start_quarter) + 1
+        elif self.get_type() == "Yearly":
+            # Format: YYYY
+            return int(end_date) - int(start_date) + 1
 
     def grab_dates(self):
         """
@@ -251,13 +218,12 @@ class Account:
         :return: a list of all available dates starting from earliest to latest + an extra date beyond the latest
                 The extra date is so there is space to add a new entry in the table
         """
-        self.read()
-        start_date = self.data['Start Date']
+        start_date = self.start_date
         year, month = [int(piece) for piece in start_date.split("-")]
         iterations = self.get_iterations() + 1
 
         dates = []
-        for i in range(1, iterations + 1):
+        for _ in range(1, iterations + 1):
             dates.append(self.date_parser('{0}-{1:02d}'.format(year, month)))
             if self.get_type() == "Monthly":
                 month += 1
@@ -272,30 +238,6 @@ class Account:
             elif self.get_type() == "Yearly":
                 year += 1
         return dates
-
-    def grab_account_names(self):
-        """
-        Grab all the account names
-        :return: a sorted list of Account names
-        """
-        self.read()
-        return [name for name in sorted(self.data["Accounts"].keys())]
-
-    def grab_account_data(self, name):
-        """
-        Grab all the account data
-        :param name: single string that holds the name of the account to add to
-        :return: dictionary with a datetime.date : int format
-        """
-        self.read()
-        if name in self.data["Accounts"].keys():
-            data = {}
-            for key, value in self.data["Accounts"][name].items():
-                if key == 'Skip':
-                    data[key] = value
-                    continue
-                data[self.date_parser(key)] = value
-            return data
 
     def date_parser(self, input_date):
         """
@@ -317,10 +259,29 @@ class Account:
             return 'Q{0} {1}'.format(quarter, year)
         elif self.get_type() == "Yearly":
             return year
-
+    
     @staticmethod
     def check_date_format(input_date):
         try:
             datetime.datetime.strptime(input_date, '%Y-%m')
         except ValueError:
             raise ValueError('Value Error: Invalid date format. Date must be in YYYY-MM format')
+
+
+class Split(Persistent):
+    def __init__(self, part_of_total: bool):
+        self.records = OIBTree.BTree()
+        self.part_of_total = part_of_total
+        self.latest_date = ''
+
+    def add_update_record(self, record_date: str, amount: int):
+        self.records[record_date] = amount
+        if not self.latest_dates or self.latest_dates < record_date:
+            # Record date occurs after latest date, update latest date with new record date
+            self.latest_date = record_date
+
+    def remove_record(self, record_date: str):
+        del self.reccords[record_date]
+        if self.latest_dates == record_date:
+            # Record date being removed occurs at the latest date time, update latest date with the previous latest date
+            self.latest_date = sorted(self.records.keys())[-1]
