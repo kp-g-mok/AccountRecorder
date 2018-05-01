@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
-    <height>240</height>
+    <width>340</width>
+    <height>320</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,7 @@
    </item>
    <item row="0" column="0">
     <layout class="QGridLayout" name="gridLayout_3">
-     <item row="2" column="0">
+     <item row="1" column="0">
       <widget class="QFrame" name="frame_2">
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -40,22 +40,83 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <widget class="QCheckBox" name="check_Skip_Total">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>10</y>
-          <width>271</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Skip Account from Total?</string>
-        </property>
-       </widget>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QGroupBox" name="startDateGroup">
+          <property name="title">
+           <string>Start Date</string>
+          </property>
+          <widget class="QLineEdit" name="lin_Start_Date">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>20</y>
+             <width>281</width>
+             <height>21</height>
+            </rect>
+           </property>
+           <property name="placeholderText">
+            <string>Input Start Date in YYYY-MM format</string>
+           </property>
+          </widget>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QGroupBox" name="radioGroup">
+          <property name="title">
+           <string>Database Type</string>
+          </property>
+          <widget class="QWidget" name="horizontalLayoutWidget">
+           <property name="geometry">
+            <rect>
+             <x>9</x>
+             <y>19</y>
+             <width>281</width>
+             <height>31</height>
+            </rect>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QRadioButton" name="radio_Monthly">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dates are in &amp;quot;MM/YYYY&amp;quot; form&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Monthly</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radio_Quarterly">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dates are in &amp;quot;QQ YYYY&amp;quot; form&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Quarterly</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QRadioButton" name="radio_Yearly">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Dates are in &amp;quot;YYYY&amp;quot; form&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Yearly</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
-     <item row="1" column="0">
+     <item row="0" column="0">
       <widget class="QGroupBox" name="accountNameGroup">
        <property name="title">
         <string>Account Name</string>
@@ -63,8 +124,8 @@
        <widget class="QComboBox" name="combo_Account_Names">
         <property name="geometry">
          <rect>
-          <x>10</x>
-          <y>20</y>
+          <x>20</x>
+          <y>70</y>
           <width>280</width>
           <height>22</height>
          </rect>
@@ -75,23 +136,16 @@
        </widget>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QFrame" name="frame">
-       <property name="frameShape">
-        <enum>QFrame::StyledPanel</enum>
-       </property>
-       <property name="frameShadow">
-        <enum>QFrame::Raised</enum>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
   </layout>
  </widget>
  <tabstops>
-  <tabstop>check_Skip_Total</tabstop>
-  <tabstop>buttonBox</tabstop>
+  <tabstop>combo_Account_Names</tabstop>
+  <tabstop>lin_Start_Date</tabstop>
+  <tabstop>radio_Monthly</tabstop>
+  <tabstop>radio_Quarterly</tabstop>
+  <tabstop>radio_Yearly</tabstop>
  </tabstops>
  <resources/>
  <connections>
