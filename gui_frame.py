@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from account_database_api import AccountGroup
-from static_functions import date_serializer, error_message
+from static_functions import error_message
 
 import pyqtgraph
 
@@ -97,6 +97,8 @@ class Frame(QtGui.QWidget):
         self.total_graph.setLabel('bottom', 'Date')
 
     def initialize_shortcuts(self):
+        QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Return), self, self.new_entry_accepted)
+        QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Enter), self, self.new_entry_accepted)
         QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), self, self.remove_entries)
         QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Z),
                         self, self.previous_graph_tab)
@@ -104,7 +106,6 @@ class Frame(QtGui.QWidget):
                         self, self.next_graph_tab)
 
     def initialize_components(self):
-        self.display_accounts()
         self.entryDialogChoice.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.new_entry_accepted)
         self.entryDialogChoice.button(QtGui.QDialogButtonBox.Discard).clicked.connect(self.new_entry_discarded)
 
@@ -118,12 +119,51 @@ class Frame(QtGui.QWidget):
             new_index = self.IndividualGraphs.count() - 1
         self.IndividualGraphs.setCurrentIndex(new_index)
 
-    def display_accounts(self):
+    def new_entry_accepted(self):
+        record_date = self.data.date_serializer(self.dateSelectionDropdown.currentText())
+        record_account = self.accountSelectionDropdown.currentText()
+        record_amount = self.amountEntry.text()
+        if not record_amount:
+            return
+        try:
+            self.data.add_account_entry(record_account, record_date, record_amount)
+        except ValueError as ve:
+            error_message(ve)
+        
+        self.amountEntry.clear()
+        self.display_accounts()
+
+    def new_entry_discarded(self):
         dates = sorted(self.data.grab_dates(), reverse = True)
         # Update date dropdown list
         self.dateSelectionDropdown.clear()
         for date in dates:
             self.dateSelectionDropdown.addItem(date)
+        self.dateSelectionDropdown.setCurrentIndex(1)
+        self.accountSelectionDropdown.setCurrentIndex(0)
+        self.amountEntry.clear()
+
+    def remove_entries(self):
+        for index in self.tableAccountData.selectedIndexes():
+            column = index.column()
+            row = index.row()
+
+            account_name = str(self.tableAccountData.horizontalHeaderItem(column).text())
+            if account_name == 'Total':
+                continue
+            
+            date = self.data.date_serializer(str(self.tableAccountData.verticalHeaderItem(row).text()))
+
+            self.data.remove_account_entry(account_name, date)
+            self.display_accounts()
+            self.IndividualGraphs.setCurrentIndex(column - 1)
+
+    def display_accounts(self):
+        dates = sorted(self.data.grab_dates(), reverse = True)
+        # Update date dropdown list
+        self.dateSelectionDropdown.clear()
+        for date in dates:
+            self.dateSelectionDropdown.addItem(self.data.date_parser(date))
         self.dateSelectionDropdown.setCurrentIndex(1)
         dates.pop(0)
         
@@ -136,7 +176,6 @@ class Frame(QtGui.QWidget):
 
         accounts.insert(0, 'Total')
         needed_cols = len(accounts)
-
         
         # Add or remove columns as needed
         current_cols = self.tableAccountData.columnCount()
@@ -166,19 +205,17 @@ class Frame(QtGui.QWidget):
 
         accounts_data = {name: self.data.grab_account_data(name) for name in accounts}
         total = [value * 100 for value in self.get_total()[::-1]]
-        accounts_data['Total'] = [0, None]
-        accounts_data['Total'][1] = {dates[i]: total[i] for i in range(len(total))}
+        accounts_data['Total'] = {dates[i]: total[i] for i in range(len(total))}
         
         # Fill out the table
         for row, date in enumerate(dates):
             for col, name in enumerate(accounts):
                 self.tableAccountData.setColumnWidth(col, minimum_column_width)
                 new_item = QtGui.QTableWidgetItem("")
-                if date in accounts_data[name][1].keys():
-                    value = accounts_data[name][1][date] / 100
+                if date in accounts_data[name].keys():
+                    value = accounts_data[name][date] / 100
                     new_item = QtGui.QTableWidgetItem('{: ,.2f}'.format(value))
                     new_item.setTextAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-                    #new_item.setFlags(QtCore.Qt.ItemIsSelectable or QtCore.Qt.ItemIsEnabled)
                     if value < 0:
                         new_item.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
                     if name == 'Total':
@@ -187,47 +224,13 @@ class Frame(QtGui.QWidget):
                 self.tableAccountData.setItem(row, col, new_item)
 
         self.tableAccountData.setHorizontalHeaderLabels(accounts)
-        self.tableAccountData.setVerticalHeaderLabels(dates)
+        self.tableAccountData.setVerticalHeaderLabels([self.data.date_parser(date) for date in dates])
 
         # Update Graphs
         self.display_total_graph()
         self.display_individual_graph()
 
         self.tableAccountData.setFocus()
-
-    def new_entry_accepted(self):
-        record_date = date_serializer(self.data.get_type(), self.dateSelectionDropdown.currentText())
-        record_account = self.accountSelectionDropdown.currentText()
-        record_amount = self.amountEntry.text()
-        try:
-            self.data.add_account_entry(record_account, record_date, record_amount)
-        except ValueError as ve:
-            error_message(ve)
-        
-        self.amountEntry.clear()
-        self.display_accounts()
-
-    def new_entry_discarded(self):
-        dates = sorted(self.data.grab_dates(), reverse = True)
-        # Update date dropdown list
-        self.dateSelectionDropdown.clear()
-        for date in dates:
-            self.dateSelectionDropdown.addItem(date)
-        self.dateSelectionDropdown.setCurrentIndex(1)
-        self.accountSelectionDropdown.setCurrentIndex(0)
-        self.amountEntry.clear()
-
-    def remove_entries(self):
-        for index in self.tableAccountData.selectedIndexes():
-            column = index.column()
-            row = index.row()
-
-            account_name = str(self.tableAccountData.horizontalHeaderItem(column).text())
-            date = date_serializer(self.data.get_type(), str(self.tableAccountData.verticalHeaderItem(row).text()))
-
-            self.data.remove_account_entry(account_name, date)
-            self.display_accounts()
-            self.IndividualGraphs.setCurrentIndex(column - 1)
 
     def display_total_graph(self):
         dates = self.data.grab_dates()[-17:-1]
@@ -251,10 +254,10 @@ class Frame(QtGui.QWidget):
         self.total_string_axis.setTicks([dates_dictionary.items()])
 
         for name in accounts:
-            if not accounts_data[name][0]:
+            if not self.data.grab_account_skip_data(name):
                 continue
-            for date in accounts_data[name][1].keys():
-                money_values[dates.index(date)] += int(accounts_data[name][1][date]) / 100
+            for date in accounts_data[name].keys():
+                money_values[dates.index(date)] += int(accounts_data[name][date]) / 100
         return money_values
 
     def display_individual_graph(self):
@@ -271,8 +274,8 @@ class Frame(QtGui.QWidget):
         for name in accounts:
             money_values = [0.00 for i in range(len(dates))]
             for date in dates:
-                if date in accounts_data[name][1].keys():
-                    money_values[dates.index(date)] += int(accounts_data[name][1][date])/100
+                if date in accounts_data[name].keys():
+                    money_values[dates.index(date)] += int(accounts_data[name][date])/100
 
             if name not in self.tabs.keys():
                 self.create_individual_graph(name)

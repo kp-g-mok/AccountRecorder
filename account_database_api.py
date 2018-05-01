@@ -88,6 +88,8 @@ class AccountGroup(Persistent):
         """
 
         self.check_date_format(input_date)
+        if self.get_type() == 'Quarterly':
+            input_date = self.date_serializer(self.date_parser(input_date))
         self.start_date = input_date
         if not self.end_date:
             self.end_date = input_date
@@ -102,8 +104,11 @@ class AccountGroup(Persistent):
             input_date {str: '%Y-%m' format} -- New end date for account database
         """
         
-        self.check_date_format(input_date)
-        self.end_date = input_date
+        if input_date and self.start_date < input_date:
+            self.check_date_format(input_date)
+            self.end_date = input_date
+        else:
+            self.end_date = self.start_date
 
     def get_type(self):
         return self.type
@@ -171,7 +176,7 @@ class AccountGroup(Persistent):
             # Set the account database date to the new entry date
             self.set_end_date(entry_date)
 
-    def remove_split(self, account_name: str):
+    def remove_account(self, account_name: str):
         """ Remove an account from the account, does nothing if it doesn't exists
         
         Arguments:
@@ -214,13 +219,17 @@ class AccountGroup(Persistent):
             account_name {str} -- account account to retrieve data from
         
         Returns:
-            tuple(bool, dict{str: int}) -- boolean holds whether the account should be counted towards the total, dict contains the account record entry data
+            dict{str: int} -- contains the account record entry data with the entry date and entry amount
+                date in %Y-%M format
         """
 
         if account_name in self.accounts:
             account = self.accounts[account_name]
-            return (account.part_of_total, 
-                {self.date_parser(key): value for key, value in account.records.items()}, )
+            return {key: value for key, value in account.records.items()}
+    
+    def grab_account_skip_data(self, account_name: str):
+        if account_name in self.accounts:
+            return self.accounts[account_name].part_of_total
 
     def get_iterations(self):
         """ Get the number of iterations this account database requires between the starting and ending date of the account
@@ -261,7 +270,7 @@ class AccountGroup(Persistent):
 
         dates = []
         for _ in range(1, iterations + 1):
-            dates.append(self.date_parser('{0}-{1:02d}'.format(year, month)))
+            dates.append('{0}-{1:02d}'.format(year, month))
             if self.type == "Monthly":
                 month += 1
                 if month == 13:
@@ -275,6 +284,28 @@ class AccountGroup(Persistent):
             elif self.type == "Yearly":
                 year += 1
         return dates
+
+    def date_serializer(self, input_date):
+        """
+        Takes a parsed string from date_parser and converts it into a string of the %Y-%m format
+        :type database_type: str
+        :type input_date: str
+        :param database_type: database types - 'Monthly', 'Quarterly', or 'Yearly'
+        :param input_date: date formatted in the below fashion
+                MM/YYYY format for 'Monthly' type
+                QQ YYYY format for 'Quarterly' type
+                YYYY format for 'Yearly' type
+        :return: string date of the date format %Y-%m
+        """
+        if self.get_type() == "Monthly":
+            month, year = input_date.split("/")
+            return '{0}-{1}'.format(year, month)
+        elif self.get_type() == "Quarterly":
+            quarter, year = input_date.split(" ")
+            month = int(quarter[1]) * 3 - 2
+            return '{0}-{1:02d}'.format(year, month)
+        elif self.get_type() == "Yearly":
+            return '{0}-{1:02d}'.format(input_date, 1)
 
     def date_parser(self, input_date):
         """
@@ -297,6 +328,18 @@ class AccountGroup(Persistent):
         elif self.get_type() == "Yearly":
             return year
     
+    def date_placeholder_text(self):
+        """
+        Returns the appropriate placeholder text depending on the database type
+        :return: a string for the place holder text
+        """
+        if self.get_type() == 'Monthly':
+            return 'Input Start Date in MM/YYYY format'
+        elif self.get_type() == 'Quarterly':
+            return 'Input Start Date in QQ YYYY format'
+        elif self.get_type() == 'Yearly':
+            return 'Input Start Date in YYYY format'
+
     @staticmethod
     def check_date_format(input_date):
         try:
@@ -321,4 +364,7 @@ class Account(Persistent):
         del self.records[record_date]
         if self.latest_date == record_date:
             # Record date being removed occurs at the latest date time, update latest date with the previous latest date
-            self.latest_date = sorted(self.records.keys())[-1]
+            if len(self.records):
+                self.latest_date = sorted(self.records.keys())[-1]
+            else:
+                self.latest_date = ''

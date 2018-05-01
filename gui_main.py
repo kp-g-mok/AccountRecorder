@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from config_file_api import Config
 from account_database_api import Database
-from static_functions import date_serializer, date_placeholder_text, error_message
+from static_functions import error_message
 
 from gui_frame import Frame
 from gui_add_remove_account_group import AddRemoveAccountGroup
@@ -26,7 +26,8 @@ class Main():
             self.directory = os.path.dirname(os.path.realpath(__file__))
         
         filename = self.last_session.get_prev_database()
-        filename = QtGui.QFileDialog.getSaveFileName(QtGui.QFileDialog(), 'New database file', self.directory, '*.fs')[0]
+        if not filename: 
+            filename = QtGui.QFileDialog.getSaveFileName(QtGui.QFileDialog(), 'New database file', self.directory, '*.fs')[0]
         if not filename:
             sys.exit()
         
@@ -210,8 +211,8 @@ class MainWindow(QtGui.QMainWindow):
                 try:
                     # if the entered group is new, add it to the database
                     new_account_group = self.database.get_account_group(name)
-                    new_account_group.set_start_date(start_date)
                     new_account_group.set_type(account_group_type)
+                    new_account_group.set_start_date(start_date)
 
                     new_tab = Frame(new_account_group, self)
 
@@ -232,15 +233,15 @@ class MainWindow(QtGui.QMainWindow):
 
     def act_remove_account_group_triggered(self):
         name, _, _, ok = AddRemoveAccountGroup.get_account_group_details(
-            self.database.grab_account_group_names(), False, self)
+            self.database.grab_account_group_names(), True, self)
         if ok and name:
-            if name in self.database:
-                self.database.remove_account_group(name)
-                for i in range(self.FileList.count()):
-                    text = str(self.FileList.tabText(i))
-                    if text == name:
-                        self.FileList.removeTab(self.FileList.setCurrentIndex(i))
-                        break
+            self.database.remove_account_group(name)
+            for i in range(self.FileList.count()):
+                text = str(self.FileList.tabText(i))
+                if text == name:
+                    self.FileList.setCurrentIndex(i)
+                    self.FileList.removeTab( self.FileList.currentIndex())
+                    break
 
     def act_add_account_triggered(self):
         if self.FileList.currentWidget():
@@ -264,11 +265,10 @@ class MainWindow(QtGui.QMainWindow):
         if self.FileList.currentWidget():
             self.FileList.currentWidget().display_accounts()
 
-            account_type = self.FileList.currentWidget().data.get_type()
-            start_date, ok = GetStartDate.get_start_date(date_placeholder_text(account_type), self)
+            start_date, ok = GetStartDate.get_start_date(self.FileList.currentWidget().data.date_placeholder_text(), self)
             if ok and start_date:
                 try:
-                    self.FileList.currentWidget().data.set_start_date(date_serializer(account_type, start_date))
+                    self.FileList.currentWidget().data.set_start_date(self.FileList.currentWidget().data.date_serializer(start_date))
                 except ValueError as ve:
                     error_message(ve)
             self.FileList.currentWidget().display_accounts()
