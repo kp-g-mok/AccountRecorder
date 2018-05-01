@@ -26,7 +26,7 @@ class Main():
             self.directory = os.path.dirname(os.path.realpath(__file__))
         
         filename = self.last_session.get_prev_database()
-        if not filename: 
+        if not filename or not os.path.isfile(filename):
             filename = QtGui.QFileDialog.getSaveFileName(QtGui.QFileDialog(), 'New database file', self.directory, '*.fs')[0]
         if not filename:
             sys.exit()

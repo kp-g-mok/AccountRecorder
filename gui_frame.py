@@ -138,7 +138,7 @@ class Frame(QtGui.QWidget):
         # Update date dropdown list
         self.dateSelectionDropdown.clear()
         for date in dates:
-            self.dateSelectionDropdown.addItem(date)
+            self.dateSelectionDropdown.addItem(self.data.date_parser(date))
         self.dateSelectionDropdown.setCurrentIndex(1)
         self.accountSelectionDropdown.setCurrentIndex(0)
         self.amountEntry.clear()
