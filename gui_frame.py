@@ -17,6 +17,7 @@ class Frame(QtGui.QWidget):
 
         self.data = account_group
 
+        self.tableAccountData.itemSelectionChanged.connect(self.item_selected)
         self.initialize_shortcuts()
         self.initialize_components()
 
@@ -301,6 +302,22 @@ class Frame(QtGui.QWidget):
         tab_plot.setLabel('bottom', 'Date')
         layout.addWidget(tab_plot)
         self.tabs[name] = tab_plot.plot(symbolSize=0, pxMode=False)
+
+    def item_selected(self):
+        for index in self.tableAccountData.selectedIndexes():
+            column = index.column()
+            row = index.row()
+
+            account_name = str(self.tableAccountData.horizontalHeaderItem(column).text())
+            if account_name == 'Total':
+                continue
+            
+            dates = sorted(self.data.grab_dates(), reverse = True)
+            date = self.data.date_serializer(str(self.tableAccountData.verticalHeaderItem(row).text()))
+            self.dateSelectionDropdown.setCurrentIndex(dates.index(date))
+            
+            accounts = list(self.data.grab_account_names())
+            self.accountSelectionDropdown.setCurrentIndex(accounts.index(account_name))
 
 
 if __name__ == '__main__':
