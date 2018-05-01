@@ -1,10 +1,8 @@
-from PyQt5 import QtGui, uic
+from PyQt5 import QtCore, QtGui, QtWidgets
 __author__ = 'Gareth Mok'
 
-form_import = uic.loadUiType('get_start_date.ui')[0]
 
-
-class GetStartDate(QtGui.QDialog, form_import):
+class GetStartDate(QtGui.QDialog):
     def __init__(self, date_placeholder_text, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setupUi(self)

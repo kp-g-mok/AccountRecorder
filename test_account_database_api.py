@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from account_database_api import Account
+from account_database_api import Database
 import os
 from datetime import date
 

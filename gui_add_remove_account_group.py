@@ -1,42 +1,58 @@
-from PyQt5 import QtGui, uic
+from PyQt5 import QtCore, QtGui, QtWidgets
 __author__ = 'Gareth Mok'
 
-form_import = uic.loadUiType('get_database_type.ui')[0]
 
-
-class GetDatabaseType(QtGui.QDialog, form_import):
-    def __init__(self, parent=None):
+class AddRemoveAccountGroup(QtGui.QDialog):
+    def __init__(self, names, remove, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setupUi(self)
 
-        self.database_type = ''
+        self.name = ''
+        self.start_date = ''
+        self.account_group_type = ''
 
         self.clearFocus()
+        self.frameOptional.setDisabled(remove)
+        self.combo_Account_Names.setEditable(not remove)
+        for name in names:
+            self.combo_Account_Names.addItem(name)
         self.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.btn_accepted_clicked)
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(320, 240)
+        Dialog.resize(340, 320)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
+                
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
+        
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayout.addWidget(self.buttonBox, 1, 0, 1, 1)
-        self.gridLayout_3 = QtWidgets.QGridLayout()
-        self.gridLayout_3.setObjectName("gridLayout_3")
-        self.frame_2 = QtWidgets.QFrame(Dialog)
-        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame_2.setObjectName("frame_2")
-        self.gridLayout_3.addWidget(self.frame_2, 2, 0, 1, 1)
-        self.radioGroup = QtWidgets.QGroupBox(Dialog)
+        
+        self.gridLayoutMain = QtWidgets.QGridLayout()
+        self.gridLayoutMain.setObjectName("gridLayoutMain")
+        self.frameOptional = QtWidgets.QFrame(Dialog)
+        self.frameOptional.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frameOptional.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frameOptional.setObjectName("frameOptional")
+        self.gridLayoutOptional = QtWidgets.QGridLayout(self.frameOptional)
+        self.gridLayoutOptional.setObjectName("gridLayoutOptional")
+        self.startDateGroup = QtWidgets.QGroupBox(self.frameOptional)
+        self.startDateGroup.setObjectName("startDateGroup")
+        
+        self.lin_Start_Date = QtWidgets.QLineEdit(self.startDateGroup)
+        self.lin_Start_Date.setGeometry(QtCore.QRect(10, 20, 281, 21))
+        self.lin_Start_Date.setObjectName("lin_Start_Date")
+        self.gridLayoutOptional.addWidget(self.startDateGroup, 0, 0, 1, 1)
+        
+        self.radioGroup = QtWidgets.QGroupBox(self.frameOptional)
         self.radioGroup.setObjectName("radioGroup")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.radioGroup)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(9, 19, 281, 31))
@@ -54,26 +70,34 @@ class GetDatabaseType(QtGui.QDialog, form_import):
         self.radio_Yearly = QtWidgets.QRadioButton(self.horizontalLayoutWidget)
         self.radio_Yearly.setObjectName("radio_Yearly")
         self.horizontalLayout.addWidget(self.radio_Yearly)
-        self.gridLayout_3.addWidget(self.radioGroup, 1, 0, 1, 1)
-        self.frame = QtWidgets.QFrame(Dialog)
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.gridLayout_3.addWidget(self.frame, 0, 0, 1, 1)
-        self.gridLayout.addLayout(self.gridLayout_3, 0, 0, 1, 1)
+        self.gridLayoutOptional.addWidget(self.radioGroup, 1, 0, 1, 1)
+        self.gridLayoutMain.addWidget(self.frameOptional, 1, 0, 1, 1)
+        
+        self.accountNameGroup = QtWidgets.QGroupBox(Dialog)
+        self.accountNameGroup.setObjectName("accountNameGroup")
+        self.combo_Account_Names = QtWidgets.QComboBox(self.accountNameGroup)
+        self.combo_Account_Names.setGeometry(QtCore.QRect(20, 70, 280, 22))
+        self.combo_Account_Names.setEditable(True)
+        self.combo_Account_Names.setObjectName("combo_Account_Names")
+        self.gridLayoutMain.addWidget(self.accountNameGroup, 0, 0, 1, 1)
+        self.gridLayout.addLayout(self.gridLayoutMain, 0, 0, 1, 1)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        Dialog.setTabOrder(self.combo_Account_Names, self.lin_Start_Date)
+        Dialog.setTabOrder(self.lin_Start_Date, self.radio_Monthly)
         Dialog.setTabOrder(self.radio_Monthly, self.radio_Quarterly)
         Dialog.setTabOrder(self.radio_Quarterly, self.radio_Yearly)
-        Dialog.setTabOrder(self.radio_Yearly, self.buttonBox)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
-        Dialog.setWindowTitle(_translate("Dialog", "Get Database Start Date"))
-        self.radioGroup.setTitle(_translate("Dialog", "Database Type"))
+        Dialog.setWindowTitle(_translate("Dialog", "Get Account Details"))
+        self.accountNameGroup.setTitle(_translate("Dialog", "Account Name"))
+        self.startDateGroup.setTitle(_translate("Dialog", "Start Date"))
+        self.lin_Start_Date.setPlaceholderText(_translate("Dialog", "Input Start Date in YYYY-MM format"))
+        self.radioGroup.setTitle(_translate("Dialog", "Account Group Type"))
         self.radio_Monthly.setToolTip(_translate("Dialog", "<html><head/><body><p>Dates are in &quot;MM/YYYY&quot; form</p></body></html>"))
         self.radio_Monthly.setText(_translate("Dialog", "Monthly"))
         self.radio_Quarterly.setToolTip(_translate("Dialog", "<html><head/><body><p>Dates are in &quot;QQ YYYY&quot; form</p></body></html>"))
@@ -82,21 +106,23 @@ class GetDatabaseType(QtGui.QDialog, form_import):
         self.radio_Yearly.setText(_translate("Dialog", "Yearly"))
 
     def btn_accepted_clicked(self):
+        self.name = self.combo_Account_Names.currentText()
+        self.start_date = self.lin_Start_Date.text()
         if self.radio_Monthly.isChecked():
-            self.database_type = 'Monthly'
+            self.account_group_type = 'Monthly'
         elif self.radio_Quarterly.isChecked():
-            self.database_type = 'Quarterly'
+            self.account_group_type = 'Quarterly'
         elif self.radio_Yearly.isChecked():
-            self.database_type = 'Yearly'
+            self.account_group_type = 'Yearly'
 
     @staticmethod
-    def get_database_type(parent=None):
+    def get_account_group_details(names, remove=False, parent=None):
         """
         ok, name, link, last = Select.select_result()
         :param parent:
         :return:
         """
-        dialog = GetDatabaseType(parent)
+        dialog = AddRemoveAccountGroup(names, remove, parent)
         result = dialog.exec_()
 
-        return dialog.database_type, result == QtGui.QDialog.Accepted
+        return dialog.name, dialog.start_date, dialog.account_group_type, result == QtGui.QDialog.Accepted

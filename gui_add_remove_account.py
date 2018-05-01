@@ -1,10 +1,8 @@
-from PyQt5 import QtGui, uic
+from PyQt5 import QtCore, QtGui, QtWidgets
 __author__ = 'Gareth Mok'
 
-form_import = uic.loadUiType('add_remove_account.ui')[0]
 
-
-class AddRemoveAccount(QtGui.QDialog, form_import):
+class AddRemoveAccount(QtGui.QDialog):
     def __init__(self, names, remove, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.setupUi(self)
@@ -62,7 +60,7 @@ class AddRemoveAccount(QtGui.QDialog, form_import):
         self.buttonBox.accepted.connect(Dialog.accept)
         self.buttonBox.rejected.connect(Dialog.reject)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        Dialog.setTabOrder(self.check_Skip_Total, self.buttonBox)
+        Dialog.setTabOrder(self.combo_Account_Names, self.check_Skip_Total)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
