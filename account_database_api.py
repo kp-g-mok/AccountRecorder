@@ -133,7 +133,7 @@ class AccountGroup(Persistent):
         return self.accounts[account_name]
 
     def add_account_entry(self, account_name: str, entry_date: str, money: str):
-        """ Add a record entry to the account, rewrites if an entry exists
+        """ Add a record entry to the account, adds to the current entry if it exists
         
         Arguments:
             account_name {str} -- account account to add an entry to
@@ -145,7 +145,6 @@ class AccountGroup(Persistent):
             KeyError -- Raised if the given account doesn't exist on the account
         """
 
-        # TODO: Update to add to the current value rather than overwrite?
         self.check_date_format(entry_date)
 
         if account_name not in self.accounts:
@@ -163,7 +162,8 @@ class AccountGroup(Persistent):
             # Set the account database date to the new entry date
             self.set_end_date(entry_date)
 
-    def convert_money_string_to_int(self, money: str):
+    @staticmethod
+    def convert_money_string_to_int(money: str):
         """Static Method to covert a string of the format:
             DDDD
             DDDD.DD
@@ -383,7 +383,7 @@ class Account(Persistent):
         self.latest_date = ''
 
     def add_update_record(self, record_date: str, amount: int):
-        self.records[record_date] = amount
+        self.records[record_date] += amount
         if not self.latest_date or self.latest_date < record_date:
             # Record date occurs after latest date, update latest date with new record date
             self.latest_date = record_date

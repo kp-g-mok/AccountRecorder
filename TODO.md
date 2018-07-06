@@ -1,6 +1,6 @@
 # TODO
 
-Get a way to add instead of overwrite a value (default behaviour?)
+Add a way to toggle between overwrite and add to existing entry?
 
 Clean up code to be more readable
 Work on automated testing
