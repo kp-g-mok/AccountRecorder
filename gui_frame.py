@@ -205,7 +205,7 @@ class Frame(QtGui.QWidget):
                     self.tableAccountData.removeRow(0)
 
         accounts_data = {name: self.data.grab_account_data(name) for name in accounts}
-        total = [value * 100 for value in self.get_total()[::-1]]
+        total = self.get_total()[::-1]
         accounts_data['Total'] = {dates[i]: total[i] for i in range(len(total))}
         
         # Fill out the table
@@ -213,14 +213,18 @@ class Frame(QtGui.QWidget):
             for col, name in enumerate(accounts):
                 self.tableAccountData.setColumnWidth(col, minimum_column_width)
                 new_item = QtGui.QTableWidgetItem("")
-                if date in accounts_data[name].keys():
-                    value = accounts_data[name][date] / 100
-                    new_item = QtGui.QTableWidgetItem('{: ,.2f}'.format(value))
+                if date in accounts_data[name].keys():                    
+                    value = str(accounts_data[name][date])
+                    if value == '0':
+                        # Pad value with two zeros to make sure the decimal comes out correctly
+                        value += '00'
+                    value = value[:-2] + '.' + value[-2:]
+                    new_item = QtGui.QTableWidgetItem('{}'.format(value))
                     new_item.setTextAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
-                    if value < 0:
+                    if float(value) < 0:
                         new_item.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))
                     if name == 'Total':
-                        if value < 0:
+                        if float(value) < 0:
                             new_item.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0, 125)))
                 self.tableAccountData.setItem(row, col, new_item)
 
@@ -249,7 +253,7 @@ class Frame(QtGui.QWidget):
         dates = self.data.grab_dates()
         accounts = self.data.grab_account_names()
         accounts_data = {name: self.data.grab_account_data(name) for name in accounts}
-        money_values = [0.00 for i in range(len(dates) - 1)]
+        money_values = [0 for i in range(len(dates) - 1)]
 
         dates_dictionary = dict(enumerate(dates[-17:-1]))
         self.total_string_axis.setTicks([dates_dictionary.items()])
@@ -258,7 +262,7 @@ class Frame(QtGui.QWidget):
             if not self.data.grab_account_skip_data(name):
                 continue
             for date in accounts_data[name].keys():
-                money_values[dates.index(date)] += int(accounts_data[name][date]) / 100
+                money_values[dates.index(date)] += int(accounts_data[name][date])
         return money_values
 
     def display_individual_graph(self):
