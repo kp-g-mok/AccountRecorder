@@ -145,12 +145,45 @@ class AccountGroup(Persistent):
             KeyError -- Raised if the given account doesn't exist on the account
         """
 
+        # TODO: Update to add to the current value rather than overwrite?
         self.check_date_format(entry_date)
 
         if account_name not in self.accounts:
             raise KeyError("account doesn't exist in account")
         
         try:
+            money = self.convert_money_string_to_int(money)
+        except ValueError as ve:
+            raise ve
+
+        self.accounts[account_name].add_update_record(entry_date, money)
+
+        if self.end_date < entry_date:
+            # Current account database end date is lower than new entry date
+            # Set the account database date to the new entry date
+            self.set_end_date(entry_date)
+
+    def convert_money_string_to_int(self, money: str):
+        """Static Method to covert a string of the format:
+            DDDD
+            DDDD.DD
+            D,DDD.DD
+            - DDDD
+
+            to an integer representation
+        
+        Arguments:
+            money {str} -- money string that will be converted into a monetary int
+        
+        Raises:
+            ValueError -- Raised if the given money value can't be converted into the int format
+        
+        Returns:
+            int -- integer that is 100 times more than the actual value
+        """
+
+        try:
+            money = money.replace(' ', '')
             money = money.replace(',', '')
             if '.' in money:
                 if len(money.split('.')[1]) == 0:  # There is nothing after the period
@@ -167,14 +200,9 @@ class AccountGroup(Persistent):
                 money = int(money) * 100
         except ValueError:
             raise ValueError("ValueError: Invalid monetary value. "
-                             "Value needs to be a number with only commas and periods")
-
-        self.accounts[account_name].add_update_record(entry_date, money)
-
-        if self.end_date < entry_date:
-            # Current account database end date is lower than new entry date
-            # Set the account database date to the new entry date
-            self.set_end_date(entry_date)
+                             "Value needs to be a number with only commas and periods or "
+                             "a negative value with a hypen.")
+        return money
 
     def remove_account(self, account_name: str):
         """ Remove an account from the account, does nothing if it doesn't exists

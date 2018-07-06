@@ -115,3 +115,5 @@ $RECYCLE.BIN/
 *.json
 *.fs*
 
+# Dev Env files
+.vscode
