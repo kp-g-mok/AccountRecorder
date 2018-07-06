@@ -49,7 +49,7 @@ class Frame(QtGui.QWidget):
         self.gridLayoutGroupBox.addWidget(self.accountSelectionDropdown, 0, 1, 1, 1, QtCore.Qt.AlignLeft)
         self.amountEntry = QtWidgets.QLineEdit(self.groupBox)
         self.amountEntry.setObjectName("amountEntry")
-        self.amountEntry.setMaxLength(20)
+        self.amountEntry.setMaxLength(10)
         self.amountEntry.setFixedWidth(150)
         self.gridLayoutGroupBox.addWidget(self.amountEntry, 0, 2, 1, 1, QtCore.Qt.AlignRight)
         self.entryDialogChoice = QtWidgets.QDialogButtonBox(self.groupBox)
@@ -130,6 +130,8 @@ class Frame(QtGui.QWidget):
             self.data.add_account_entry(record_account, record_date, record_amount)
         except ValueError as ve:
             error_message(ve)
+        except OverflowError as oe:
+            error_message(oe)
         
         self.amountEntry.clear()
         self.display_accounts()
@@ -218,8 +220,7 @@ class Frame(QtGui.QWidget):
                     if value == '0':
                         # Pad value with two zeros to make sure the decimal comes out correctly
                         value += '00'
-                    value = value[:-2] + '.' + value[-2:]
-                    new_item = QtGui.QTableWidgetItem('{}'.format(value))
+                    new_item = QtGui.QTableWidgetItem('{: ,}'.format(int(value[:-2])) + '.' + value[-2:])
                     new_item.setTextAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
                     if float(value) < 0:
                         new_item.setForeground(QtGui.QBrush(QtGui.QColor(255, 0, 0)))

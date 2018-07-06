@@ -152,10 +152,11 @@ class AccountGroup(Persistent):
         
         try:
             money = self.convert_money_string_to_int(money)
+            self.accounts[account_name].add_update_record(entry_date, money)
         except ValueError as ve:
             raise ve
-
-        self.accounts[account_name].add_update_record(entry_date, money)
+        except OverflowError as oe:
+            raise oe
 
         if self.end_date < entry_date:
             # Current account database end date is lower than new entry date
@@ -383,7 +384,12 @@ class Account(Persistent):
         self.latest_date = ''
 
     def add_update_record(self, record_date: str, amount: int):
-        self.records[record_date] += amount
+        if record_date not in self.records:
+            self.records[record_date] = 0
+        try:
+            self.records[record_date] += amount
+        except OverflowError:
+            raise OverflowError('Overflow Error: Monetary value too large')
         if not self.latest_date or self.latest_date < record_date:
             # Record date occurs after latest date, update latest date with new record date
             self.latest_date = record_date
