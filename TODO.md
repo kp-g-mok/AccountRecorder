@@ -1,8 +1,6 @@
-To Build:   pyinstaller gui_main.spec
+To Build:   pyinstaller -F gui_main.spec
 
 # TODO
-
-Add a way to toggle between overwrite and add to existing entry?
 
 Clean up code to be more readable
 Work on automated testing

@@ -117,3 +117,4 @@ $RECYCLE.BIN/
 
 # Dev Env files
 .vscode
+*.spec0

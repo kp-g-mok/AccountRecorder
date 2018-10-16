@@ -17,7 +17,7 @@ class Frame(QtGui.QWidget):
 
         self.data = account_group
 
-        self.tableAccountData.itemSelectionChanged.connect(self.item_selected)
+        self.tableAccountData.cellClicked.connect(self.table_cell_clicked)
         self.initialize_shortcuts()
         self.initialize_components()
 
@@ -47,15 +47,19 @@ class Frame(QtGui.QWidget):
         self.accountSelectionDropdown.setObjectName("accountSelectionDropdown")
         self.accountSelectionDropdown.setFixedWidth(350)
         self.gridLayoutGroupBox.addWidget(self.accountSelectionDropdown, 0, 1, 1, 1, QtCore.Qt.AlignLeft)
+        self.addoroverwriteSelectionDropdown = QtWidgets.QComboBox(self.groupBox)
+        self.addoroverwriteSelectionDropdown.setObjectName("addoroverwriteSelectionDropdown")
+        self.addoroverwriteSelectionDropdown.setFixedWidth(50)
+        self.gridLayoutGroupBox.addWidget(self.addoroverwriteSelectionDropdown, 0, 2, 1, 1, QtCore.Qt.AlignLeft)
         self.amountEntry = QtWidgets.QLineEdit(self.groupBox)
         self.amountEntry.setObjectName("amountEntry")
         self.amountEntry.setMaxLength(10)
         self.amountEntry.setFixedWidth(150)
-        self.gridLayoutGroupBox.addWidget(self.amountEntry, 0, 2, 1, 1, QtCore.Qt.AlignRight)
+        self.gridLayoutGroupBox.addWidget(self.amountEntry, 0, 3, 1, 1, QtCore.Qt.AlignRight)
         self.entryDialogChoice = QtWidgets.QDialogButtonBox(self.groupBox)
         self.entryDialogChoice.setStandardButtons(QtWidgets.QDialogButtonBox.Discard|QtWidgets.QDialogButtonBox.Ok)
         self.entryDialogChoice.setObjectName("entryDialogChoice")
-        self.gridLayoutGroupBox.addWidget(self.entryDialogChoice, 0, 3, 1, 1, QtCore.Qt.AlignRight)
+        self.gridLayoutGroupBox.addWidget(self.entryDialogChoice, 0, 4, 1, 1, QtCore.Qt.AlignRight)
     
         self.tableAccountData = QtGui.QTableWidget()
         self.tableAccountData.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -109,6 +113,8 @@ class Frame(QtGui.QWidget):
     def initialize_components(self):
         self.entryDialogChoice.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.new_entry_accepted)
         self.entryDialogChoice.button(QtGui.QDialogButtonBox.Discard).clicked.connect(self.new_entry_discarded)
+        self.addoroverwriteSelectionDropdown.addItem('Write')
+        self.addoroverwriteSelectionDropdown.addItem('Add')
 
     def next_graph_tab(self):
         new_index = (self.IndividualGraphs.currentIndex() + 1) % self.IndividualGraphs.count()
@@ -124,16 +130,19 @@ class Frame(QtGui.QWidget):
         record_date = self.data.date_serializer(self.dateSelectionDropdown.currentText())
         record_account = self.accountSelectionDropdown.currentText()
         record_amount = self.amountEntry.text()
+        record_entry_type = self.addoroverwriteSelectionDropdown.currentText()
+
         if not record_amount:
             return
         try:
-            self.data.add_account_entry(record_account, record_date, record_amount)
+            self.data.add_account_entry(record_account, record_date, record_amount, record_entry_type)
         except ValueError as ve:
             error_message(ve)
         except OverflowError as oe:
             error_message(oe)
         
         self.amountEntry.clear()
+        self.addoroverwriteSelectionDropdown.setCurrentIndex(0)
         self.display_accounts()
 
     def new_entry_discarded(self):
@@ -144,6 +153,7 @@ class Frame(QtGui.QWidget):
             self.dateSelectionDropdown.addItem(self.data.date_parser(date))
         self.dateSelectionDropdown.setCurrentIndex(1)
         self.accountSelectionDropdown.setCurrentIndex(0)
+        self.addoroverwriteSelectionDropdown.setCurrentIndex(0)
         self.amountEntry.clear()
 
     def remove_entries(self):
@@ -242,7 +252,7 @@ class Frame(QtGui.QWidget):
         dates = self.data.grab_dates()[-17:-1]
 
         date_indices = [i for i in range(len(dates))]
-        money_values = self.get_total()[-16:]
+        money_values = [int(i/100) for i in self.get_total()[-16:]]
 
         if money_values[-1] < 0:
             self.total_plot.setPen((255, 0, 0), width=2)
@@ -308,21 +318,18 @@ class Frame(QtGui.QWidget):
         layout.addWidget(tab_plot)
         self.tabs[name] = tab_plot.plot(symbolSize=0, pxMode=False)
 
-    def item_selected(self):
-        for index in self.tableAccountData.selectedIndexes():
-            column = index.column()
-            row = index.row()
-
-            account_name = str(self.tableAccountData.horizontalHeaderItem(column).text())
-            if account_name == 'Total':
-                continue
-            
-            dates = sorted(self.data.grab_dates(), reverse = True)
-            date = self.data.date_serializer(str(self.tableAccountData.verticalHeaderItem(row).text()))
-            self.dateSelectionDropdown.setCurrentIndex(dates.index(date))
-            
-            accounts = list(self.data.grab_account_names())
-            self.accountSelectionDropdown.setCurrentIndex(accounts.index(account_name))
+    def table_cell_clicked(self, row, column):
+        account_name = str(self.tableAccountData.horizontalHeaderItem(column).text())
+        
+        if account_name == 'Total':
+            return
+        
+        dates = sorted(self.data.grab_dates(), reverse = True)
+        date = self.data.date_serializer(str(self.tableAccountData.verticalHeaderItem(row).text()))
+        self.dateSelectionDropdown.setCurrentIndex(dates.index(date))
+        
+        accounts = list(self.data.grab_account_names())
+        self.accountSelectionDropdown.setCurrentIndex(accounts.index(account_name))
 
 
 if __name__ == '__main__':

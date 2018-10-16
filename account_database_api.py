@@ -132,13 +132,15 @@ class AccountGroup(Persistent):
             self.accounts[account_name] = Account(part_of_total)
         return self.accounts[account_name]
 
-    def add_account_entry(self, account_name: str, entry_date: str, money: str):
+    def add_account_entry(self, account_name: str, entry_date: str, money: str, entry_type:str):
         """ Add a record entry to the account, adds to the current entry if it exists
         
         Arguments:
             account_name {str} -- account account to add an entry to
             entry_date {str: '%Y-%m' format} -- date when the entry occurs
             money {str} -- money string that will be converted into a monetary int
+            entry_type {str} -- determines how the given value will be recorded for the entry
+                Write means that it overwrites the current value; Add means that it adds to the current value
         
         Raises:
             ValueError -- Raised if the given money value can't be converted into the int format
@@ -152,7 +154,7 @@ class AccountGroup(Persistent):
         
         try:
             money = self.convert_money_string_to_int(money)
-            self.accounts[account_name].add_update_record(entry_date, money)
+            self.accounts[account_name].add_update_record(entry_date, entry_type, money)
         except ValueError as ve:
             raise ve
         except OverflowError as oe:
@@ -383,11 +385,14 @@ class Account(Persistent):
         self.part_of_total = part_of_total
         self.latest_date = ''
 
-    def add_update_record(self, record_date: str, amount: int):
+    def add_update_record(self, record_date: str, entry_type: str, amount: int):
         if record_date not in self.records:
             self.records[record_date] = 0
         try:
-            self.records[record_date] += amount
+            if entry_type == 'Add':
+                self.records[record_date] += amount
+            elif entry_type == 'Write':
+                self.records[record_date] = amount
         except OverflowError:
             raise OverflowError('Overflow Error: Monetary value too large')
         if not self.latest_date or self.latest_date < record_date:
