@@ -8,6 +8,7 @@ import pyqtgraph
 __author__ = 'Gareth Mok'
 
 minimum_column_width = 125
+lookback_months = 14
 
 
 class Frame(QtGui.QWidget):
@@ -173,6 +174,7 @@ class Frame(QtGui.QWidget):
 
     def display_accounts(self):
         dates = sorted(self.data.grab_dates(), reverse = True)
+
         # Update date dropdown list
         self.dateSelectionDropdown.clear()
         for date in dates:
@@ -249,10 +251,10 @@ class Frame(QtGui.QWidget):
         self.tableAccountData.setFocus()
 
     def display_total_graph(self):
-        dates = self.data.grab_dates()[-17:-1]
+        dates = self.data.grab_dates()[-(lookback_months + 1) : -1]
 
         date_indices = [i for i in range(len(dates))]
-        money_values = [int(i/100) for i in self.get_total()[-16:]]
+        money_values = [int(i/100) for i in self.get_total()[-lookback_months:]]
 
         if money_values[-1] < 0:
             self.total_plot.setPen((255, 0, 0), width=2)
@@ -266,7 +268,7 @@ class Frame(QtGui.QWidget):
         accounts_data = {name: self.data.grab_account_data(name) for name in accounts}
         money_values = [0 for i in range(len(dates) - 1)]
 
-        dates_dictionary = dict(enumerate(dates[-17:-1]))
+        dates_dictionary = dict(enumerate(dates[-(lookback_months + 1):-1]))
         self.total_string_axis.setTicks([dates_dictionary.items()])
 
         for name in accounts:
@@ -281,7 +283,7 @@ class Frame(QtGui.QWidget):
         for name in [key for key in self.tabs.keys()]:
             del self.tabs[name]
 
-        dates = self.data.grab_dates()[-17: -1]
+        dates = self.data.grab_dates()[-(lookback_months + 1): -1]
         accounts = self.data.grab_account_names()
         accounts_data = {name: self.data.grab_account_data(name) for name in accounts}
 
@@ -302,7 +304,7 @@ class Frame(QtGui.QWidget):
             self.tabs[name].setData(x=date_indices, y=money_values)
 
     def create_individual_graph(self, name):
-        dates_dictionary = dict(enumerate(self.data.grab_dates()[-17:-1]))
+        dates_dictionary = dict(enumerate(self.data.grab_dates()[-(lookback_months + 1):-1]))
 
         widget = QtGui.QWidget()
         layout = QtGui.QGridLayout(widget)

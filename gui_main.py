@@ -35,11 +35,14 @@ class Main():
         self.last_session.set_prev_database(filename)
 
     def start_app(self):
-        with self.database as db:            
-            my_window = MainWindow(self.directory, self.last_session, db, None)
-            my_window.show()
-            my_window.act_refresh_accounts_triggered()
-            sys.exit(self.app.exec_())
+        try:
+            with self.database as db:      
+                my_window = MainWindow(self.directory, self.last_session, db, None)
+                my_window.show()
+                my_window.act_refresh_accounts_triggered()
+                sys.exit(self.app.exec_())
+        except SystemExit:
+            pass
 
 
 class MainWindow(QtGui.QMainWindow):

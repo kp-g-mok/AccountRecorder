@@ -1,4 +1,5 @@
-To Build:   pyinstaller -F gui_main.spec
+To Build:
+pyinstaller -F gui_main.spec
 
 # TODO
 
